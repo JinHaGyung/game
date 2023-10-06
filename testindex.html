@@ -8,7 +8,9 @@
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.51.0/dist/phaser-arcade-physics.min.js"></script> 
 
 <body>
-  <script>var config = {
+  <script>
+  
+  var config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
@@ -19,40 +21,49 @@
     }
 };
 
-var player;
-var jumpHeight = 200; // 클릭 시 플레이어가 위로 이동할 높이
-var isJumping = false;
-
 var game = new Phaser.Game(config);
+var movingObject;
+var objectsGroup;
 
 function preload() {
-    this.load.image('player', '/assets/fox.png');
+    this.load.image('object', '/assets/fox.png');
 }
 
 function create() {
-    player = this.physics.add.image(100, 300, 'player'); // 플레이어 생성
-    player.setVelocityX(150); // 플레이어 초기 좌우 속도 설정
+    //objectsGroup = this.physics.add.group();
 
-    // 클릭 이벤트 리스너 등록
-    this.input.on('pointerdown', function(pointer) {
-        if (!isJumping) {
-            player.setVelocityY(-jumpHeight); // 플레이어를 위로 이동
-            isJumping = true;
-        }
+    var fox = this.physics.add.image(0, 0, 'fox');
+  fox.setOrigin(-4, -3.3); 
+  fox.setScale(0.3); 
+
+
+    // 움직이는 물체 생성
+    movingObject = this.physics.add.sprite(400, 500, 'object');
+    movingObject.setVelocity(100, 0); // 초기 속도 설정
+    movingObject.setInteractive(); // 클릭 가능하게 설정
+
+    // 움직이는 물체에 클릭 이벤트 리스너 추가
+    movingObject.on('pointerdown', function(pointer) {
+        // 클릭한 위치로 움직이기
+        movingObject.x = pointer.x;
+        movingObject.y = pointer.y;
+
+        // 새로운 물체 생성
+        var newObject = objectsGroup.create(pointer.x, pointer.y, 'object');
+        newObject.setVelocity(100, 0); // 새로운 물체도 움직이기
+        newObject.setInteractive(); // 클릭 가능하게 설정
+
+        // 새로운 물체에 클릭 이벤트 리스너 추가
+        newObject.on('pointerdown', function(pointer) {
+            // 클릭한 위치로 움직이기
+            newObject.x = pointer.x;
+            newObject.y = pointer.y;
+        });
     });
 }
 
 function update() {
-    // 화면을 벗어나면 반대쪽에서 나타나게 함
-    if (player.x > config.width) {
-        player.x = -player.width;
-    }
-
-    // 플레이어가 바닥에 닿으면 점프 상태를 초기화
-    if (player.y >= config.height - player.height / 2) {
-        player.y = config.height - player.height / 2;
-        isJumping = false;
-    }
+    // 여기에서 움직이는 물체와 추가로 생성된 물체의 업데이트 로직을 구현할 수 있습니다.
 }
 
   </script>
