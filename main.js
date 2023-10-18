@@ -16,7 +16,7 @@ var config = {
           default: 'arcade',
           arcade: {
               gravity: { y: 0 },
-              debug: true
+              debug: false
           }
     },
     scene: {
@@ -36,12 +36,21 @@ var newFox;
 //점수
 var score = 0;
 var scoreText;
+var scoreItem;
+var scoreB;
 
 //목숨
 var lives = 3;
 
 //카운트
 let count = 0;
+var timeLimit = 60; // 시간 제한 (초)
+var timeItem;
+var timeB;
+
+//시간
+var timerText;
+
 //충돌 판정용
 var collisionOccurred = false;
 
@@ -56,13 +65,20 @@ function preload() {
   this.load.image('sky', 'background.png');
   //캐릭터
   this.load.image('fox', 'fox.png');
+  //시계
+  this.load.image('time', 'time.png');
+  //추가점수
+  this.load.image('score', 'score.png');
 }
 
 // 게임 오브젝트 초기 세팅
 function create() {
   // 캐릭터 쌓기용
   players = this.physics.add.group();
+  scoreItem = this.physics.add.group();
+  timeItem = this.physics.add.group();
 
+  
   //배경 이미지(배경,기본 캐릭터1)
   var backgroundImage = this.add.image(0, 0, 'sky');
   backgroundImage.setOrigin(0, 0.45); 
@@ -77,8 +93,6 @@ function create() {
   player.setScale(0.3); 
   //마우스 클릭 가능하게 세팅하기
   player.setInteractive();
-
-
   //클릭시 정지 후 던지기
   player.on('pointerdown', clickPlayer,this);
 
@@ -87,10 +101,19 @@ function create() {
   scoreText.setScrollFactor(0);
   livesText = this.add.text(1000, 16, `Lives: ${lives}`, { fontSize: '32px', fill: '#fff' });
   livesText.setScrollFactor(0);
+  timerText = this.add.text(500, 16, `Time: ${timeLimit}`, { fontSize: '32px', fill: '#fff' });
+  timerText.setScrollFactor(0);
+  timerEvent = this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, repeat: timeLimit });
 
-  //충돌 적용
+  //기본 충돌 적용
   this.physics.add.collider(fox, players, onCollision, null, this);
-
+}
+function updateTimer() {
+  timeLimit--; // 시간 감소
+  timerText.setText('Time: ' + timeLimit); // UI 업데이트
+  if (timeLimit <= 0) {
+      timerText.setText('Time: 0');
+  }
 }
 function onCollision(fox,players) {
   if (!collisionOccurred) {
@@ -107,12 +130,10 @@ function onCollision(fox,players) {
 function update() {
   // 캐릭터가 자동으로 좌우로 움직임
   player.x += speed;
-
   // 화면 경계에 닿으면 방향을 바꿈
   if (player.x >= config.width - player.x/2|| player.x <=  -config.width/10) {
-     speed *= -1; // 방향 전환
-
-  }
+    // 방향 전환 
+     speed *= -1;}
   //던진 후 내려오기
   var lastObject = players.children.entries[players.children.entries.length-1];
   var underObject = players.children.entries[players.children.entries.length-2];
@@ -148,8 +169,8 @@ function update() {
       livesText.setText('Lives: ' + lives);
     }
   });
-}
 
+}
 //클릭 후 정지 후 던지기 함수
 function clickPlayer(pointer){
   collisionOccurred = false;
@@ -158,10 +179,11 @@ function clickPlayer(pointer){
   newFox.setScale(0.3);
   newFox.setVelocityY(-1000);
 
-
   //움직이는 여우 비활성화
   player.setVisible(false);
   setTimeout(function() {
     player.setVisible(true);
   }, 1000);
 }
+
+//아이템 생성
